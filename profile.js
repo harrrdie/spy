@@ -267,6 +267,67 @@ function setupEventListeners(user, isOwnProfile, state) {
         } catch (e) { alert('Ошибка'); }
     });
 
+    // Открыть модальное окно лайков при клике на количество
+    const likeCountEl = document.getElementById('likeCount');
+    if (likeCountEl) {
+        likeCountEl.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const likesModal = document.getElementById('likesModal');
+            const likesLoading = document.getElementById('likesLoading');
+            const likesList = document.getElementById('likesList');
+            
+            if (!likesModal) return;
+            
+            likesModal.classList.add('active');
+            likesLoading.style.display = 'block';
+            likesList.innerHTML = '';
+            
+            try {
+                const res = await fetch(`/api/profile/${user.id}/likes`);
+                const data = await res.json();
+                likesLoading.style.display = 'none';
+                
+                if (data.success && data.likers && data.likers.length > 0) {
+                    likesList.innerHTML = '';
+                    data.likers.forEach(liker => {
+                        const a = document.createElement('a');
+                        a.href = `/profile/${liker.id}`;
+                        a.className = 'like-item';
+                        a.innerHTML = `
+                            <img src="${getAvatarUrl(liker.avatar_seed)}" alt="" class="like-item-avatar">
+                            <div class="like-item-info">
+                                <div class="like-item-name">${escapeHtml(liker.display_name)}</div>
+                                <div class="like-item-username">@${escapeHtml(liker.username)}</div>
+                            </div>
+                        `;
+                        likesList.appendChild(a);
+                    });
+                } else {
+                    likesList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Никто еще не лайкнул профиль</p>';
+                }
+            } catch (e) {
+                likesLoading.style.display = 'none';
+                likesList.innerHTML = '<p style="color: #ff6b6b; text-align: center; padding: 20px;">Ошибка загрузки</p>';
+            }
+        });
+    }
+
+    // Закрыть модальное окно лайков
+    const closeLikesBtn = document.getElementById('closeLikesBtn');
+    const likesModal = document.getElementById('likesModal');
+    if (closeLikesBtn) {
+        closeLikesBtn.addEventListener('click', () => {
+            if (likesModal) likesModal.classList.remove('active');
+        });
+    }
+    if (likesModal) {
+        likesModal.addEventListener('click', (e) => {
+            if (e.target === likesModal) {
+                likesModal.classList.remove('active');
+            }
+        });
+    }
+
     const addFriendBtnEl = document.getElementById('addFriendBtn');
     if (addFriendBtnEl) {
         const sent = state.friendRequestSent;

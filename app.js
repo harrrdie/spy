@@ -108,6 +108,7 @@ const finalResultsTitle = document.getElementById('finalResultsTitle');
 const finalResultsBody = document.getElementById('finalResultsBody');
 const finalResultsIcon = document.getElementById('finalResultsIcon');
 const closeFinalResultsBtn = document.getElementById('closeFinalResults');
+const backToMainBtn = document.getElementById('backToMainBtn');
 
 // QR-код приглашения
 const qrModal = document.getElementById('qrModal');
@@ -717,7 +718,6 @@ function setupEventListeners() {
         });
     }
     
-    // Закрыть модальное окно просмотра картинки локации
     if (closeLocationImageViewerBtn && locationImageViewerModal) {
         closeLocationImageViewerBtn.addEventListener('click', () => {
             locationImageViewerModal.classList.remove('active');
@@ -730,6 +730,31 @@ function setupEventListeners() {
             if (e.target === locationImageViewerModal) {
                 locationImageViewerModal.classList.remove('active');
             }
+        });
+    }
+    
+    // Кнопка "Вернуться на главную" на экране результатов
+    if (backToMainBtn && finalResultsModal) {
+        backToMainBtn.addEventListener('click', function() {
+            playSound('button');
+            // Сбрасываем флаг
+            isModalOpen = false;
+            // Закрываем модальное окно
+            finalResultsModal.classList.remove('active');
+            
+            // Явно скрываем фон модального окна
+            finalResultsModal.style.display = 'none';
+            
+            // Возвращаемся на главную
+            setTimeout(() => {
+                // Проверяем, что игрок все еще в игре
+                if (roomCode && playerId) {
+                    // Отправляем команду о выходе
+                    socket.emit('leave_room');
+                    showScreen('connectionScreen');
+                    addSystemMessage('Игра завершена. Вы вернулись на главную.');
+                }
+            }, 100);
         });
     }
 }
@@ -1346,6 +1371,9 @@ function showQuestionModal(targetName) {
             const avatarUrl = await getLocationAvatarUrl(currentLocation);
             locationHint.innerHTML = `<p><i class="fas fa-map-marker-alt"></i> Локация: <img src="${avatarUrl}" alt="" style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover; vertical-align: middle; margin: 0 6px;" onerror="this.style.display='none'"> <strong>${escapeHtmlForDisplay(currentLocation)}</strong></p>`;
             locationHint.style.display = 'block';
+            // Make the location image clickable
+            const img = locationHint.querySelector('img');
+            makeLocationImageClickable(img);
         })();
     } else {
         locationHint.style.display = 'none';
@@ -1402,6 +1430,9 @@ function showAnswerModal(askerName, question) {
             const avatarUrl = await getLocationAvatarUrl(currentLocation);
             locationHint.innerHTML = `<p><i class="fas fa-map-marker-alt"></i> Локация: <img src="${avatarUrl}" alt="" style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover; vertical-align: middle; margin: 0 6px;" onerror="this.style.display='none'"> <strong>${escapeHtmlForDisplay(currentLocation)}</strong></p>`;
             locationHint.style.display = 'block';
+            // Make the location image clickable
+            const img = locationHint.querySelector('img');
+            makeLocationImageClickable(img);
         })();
     } else {
         locationHint.style.display = 'none';
@@ -1990,13 +2021,6 @@ function showFinalResults(data) {
     modalContent.style.alignItems = 'center';
     modalContent.style.justifyContent = 'center';
     modalContent.style.padding = '40px 30px';
-    
-    // Стили для кнопки
-    const closeButton = finalResultsModal.querySelector('#closeFinalResults');
-    closeButton.style.marginTop = '30px';
-    closeButton.style.width = '80%';
-    closeButton.style.maxWidth = '300px';
-    closeButton.style.alignSelf = 'center';
     
     if (isWinner) {
         finalResultsTitle.textContent = 'ПОБЕДА!';

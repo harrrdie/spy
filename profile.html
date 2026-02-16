@@ -77,6 +77,56 @@
             gap: 8px;
             margin-top: 8px;
         }
+        .likes-modal-content {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .likes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .like-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+        }
+        .like-item:hover {
+            background: rgba(77, 184, 255, 0.1);
+        }
+        .like-item-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .like-item-info {
+            flex: 1;
+        }
+        .like-item-name {
+            font-weight: 600;
+            color: #4db8ff;
+        }
+        .like-item-username {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        .light-theme .like-item {
+            background: #f8fafc;
+        }
+        .light-theme .like-item:hover {
+            background: #e3f2fd;
+        }
+        .light-theme .like-item-name {
+            color: #3498db;
+        }
     </style>
 </head>
 <body class="dark-theme profile-page">
@@ -136,7 +186,7 @@
                                 <button class="btn-secondary edit-btn" id="editProfileBtn"><i class="fas fa-edit"></i> Редактировать</button>
                             </div>
                             <div id="profileActionsOther" style="display: none;">
-                                <button class="profile-like-btn" id="likeProfileBtn"><i class="fas fa-heart"></i> <span id="likeBtnText">Нравится</span> <span class="profile-like-count" id="likeCount">0</span></button>
+                                <button class="profile-like-btn" id="likeProfileBtn"><i class="fas fa-heart"></i> <span id="likeBtnText">Нравится</span> <span class="profile-like-count" id="likeCount" style="cursor: pointer;" title="Нажмите, чтобы увидеть, кто это лайкнул">0</span></button>
                                 <button class="btn-secondary edit-btn" id="addFriendBtn"><i class="fas fa-user-plus"></i> В друзья</button>
                             </div>
                         </div>
@@ -193,6 +243,21 @@
         <footer>
             <p>Игра "Шпион" | Профиль</p>
         </footer>
+    </div>
+
+    <!-- Модальное окно с лайками -->
+    <div id="likesModal" class="modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-heart" style="color: #ff6b6b;"></i> Лайки профиля</h2>
+            <div id="likesLoading" style="text-align: center; padding: 20px; display: none;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: #4db8ff;"></i>
+                <p style="margin-top: 10px;">Загрузка...</p>
+            </div>
+            <div id="likesContainer" class="likes-modal-content">
+                <div class="likes-list" id="likesList"></div>
+            </div>
+            <button class="btn-secondary" id="closeLikesBtn">Закрыть</button>
+        </div>
     </div>
 
     <!-- Модальное окно редактирования -->

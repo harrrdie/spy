@@ -200,6 +200,36 @@ router.post('/:id/like', (req, res) => {
     }
 });
 
+// Получить список пользователей, которые лайкнули профиль
+router.get('/:id/likes', (req, res) => {
+    try {
+        const profileUserId = parseInt(req.params.id);
+        const user = db.prepare('SELECT id FROM users WHERE id = ?').get(profileUserId);
+        if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+        
+        const likers = db.prepare(`
+            SELECT u.id, u.username, u.display_name, u.avatar_seed
+            FROM profile_likes pl
+            JOIN users u ON pl.liker_user_id = u.id
+            WHERE pl.profile_user_id = ?
+            ORDER BY u.display_name ASC
+        `).all(profileUserId);
+        
+        res.json({ 
+            success: true, 
+            likers: likers.map(u => ({
+                id: u.id,
+                username: u.username,
+                display_name: u.display_name || u.username,
+                avatar_seed: u.avatar_seed || u.username
+            }))
+        });
+    } catch (err) {
+        console.error('Ошибка получения списка лайков:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
 // Добавить в друзья (отправить заявку)
 router.post('/:id/friend', (req, res) => {
     try {
