@@ -925,6 +925,57 @@ io.on('connection', (socket) => {
         }
     });
     
+    // Перезапуск игры в одной комнате
+    socket.on('restart_game_in_room', (data) => {
+        const { roomCode } = data;
+        const room = rooms[roomCode];
+        
+        if (!room) return;
+        
+        // Сбрасываем состояние игры
+        room.gameStarted = false;
+        room.gameEnded = false;
+        room.spyId = null;
+        room.currentLocation = null;
+        room.votes = {};
+        room.roundActive = false;
+        room.currentTurnPlayerId = null;
+        room.currentQuestion = null;
+        room.askedPlayers = new Set();
+        room.earlyVoteRequests = 0;
+        room.questionChain = [];
+        room.spyGuessedLocation = false;
+        room.spyGuessing = false;
+        room.spyGuessOptions = [];
+        
+        // Очищаем состояние всех игроков
+        room.players.forEach(p => {
+            p.role = null;
+            p.isSpy = false;
+            p.hasBeenAsked = false;
+            p.hasAsked = false;
+        });
+        
+        // Очищаем таймер если он был запущен
+        if (room.timerInterval) {
+            clearInterval(room.timerInterval);
+        }
+        
+        // Находим хоста
+        const host = room.players.find(p => p.isHost);
+        
+        // Отправляем событие о готовности вернуться в лобби
+        io.to(roomCode).emit('restart_game_ready', {
+            players: room.players,
+            hostName: host ? host.name : '-'
+        });
+        
+        // Отправляем системное сообщение
+        io.to(roomCode).emit('system_message', {
+            message: 'Игра закончена! Хост может начать новую игру.'
+        });
+    });
+    
     // Отключение игрока
     socket.on('disconnect', () => {
         console.log('Отключение:', socket.id);

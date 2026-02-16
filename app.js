@@ -116,6 +116,11 @@ const qrCodeImage = document.getElementById('qrCodeImage');
 const qrInviteLink = document.getElementById('qrInviteLink');
 const closeQrBtn = document.getElementById('closeQr');
 
+// Модальное окно для просмотра картинки локации
+const locationImageViewerModal = document.getElementById('locationImageViewerModal');
+const locationImageViewerImage = document.getElementById('locationImageViewerImage');
+const closeLocationImageViewerBtn = document.getElementById('closeLocationImageViewer');
+
 const errorContainer = document.getElementById('errorContainer');
 const lobbyErrorContainer = document.getElementById('lobbyErrorContainer');
 
@@ -678,14 +683,14 @@ function setupEventListeners() {
         // Явно скрываем фон модального окна
         finalResultsModal.style.display = 'none';
         
-        // Возвращаемся в лобби
+        // Перезапускаем игру в той же комнате
         setTimeout(() => {
             // Проверяем, что игрок все еще в игре
             if (roomCode && playerId) {
-                // Возвращаемся в лобби
-                socket.emit('leave_room');
-                showScreen('connectionScreen');
-                addSystemMessage('Игра завершена. Вы покинули комнату.');
+                // Отправляем событие перезапуска игры в ту же комнату
+                socket.emit('restart_game_in_room', {
+                    roomCode: roomCode
+                });
             }
         }, 100);
     });
@@ -709,6 +714,22 @@ function setupEventListeners() {
     if (closeInfoAboutSiteBtn && infoAboutSiteModal) {
         closeInfoAboutSiteBtn.addEventListener('click', () => {
             infoAboutSiteModal.classList.remove('active');
+        });
+    }
+    
+    // Закрыть модальное окно просмотра картинки локации
+    if (closeLocationImageViewerBtn && locationImageViewerModal) {
+        closeLocationImageViewerBtn.addEventListener('click', () => {
+            locationImageViewerModal.classList.remove('active');
+        });
+    }
+    
+    // Закрыть модальное окно при клике на фон
+    if (locationImageViewerModal) {
+        locationImageViewerModal.addEventListener('click', (e) => {
+            if (e.target === locationImageViewerModal) {
+                locationImageViewerModal.classList.remove('active');
+            }
         });
     }
 }
@@ -811,6 +832,9 @@ function setupSocketListeners() {
             (async () => {
                 const avatarUrl = await getLocationAvatarUrl(data.location);
                 locationHintEl.innerHTML = `<img src="${avatarUrl}" alt="" style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover; vertical-align: middle; margin-right: 6px;" onerror="this.style.display='none'"> <strong>${escapeHtmlForDisplay(data.location)}</strong>`;
+                // Make the location image clickable
+                const img = locationHintEl.querySelector('img');
+                makeLocationImageClickable(img);
             })();
         }
         
@@ -1034,6 +1058,31 @@ function setupSocketListeners() {
         if (locationReminder) {
             locationReminder.remove();
             locationReminder = null;
+        }
+        
+        // Закрываем все модальные окна
+        closeAllModals();
+    });
+    
+    // Перезапуск игры в одной комнате
+    socket.on('restart_game_ready', function(data) {
+        if (window.history && window.history.pushState) {
+            window.history.pushState(null, '', '/room/' + roomCode);
+        }
+        showScreen('lobbyScreen');
+        addSystemMessage('Игра завершена! Вы вернулись в лобби. Хост может начать новую игру.');
+        
+        // Удаляем напоминание о локации
+        if (locationReminder) {
+            locationReminder.remove();
+            locationReminder = null;
+        }
+        
+        // Обновляем список игроков
+        if (data.players) {
+            updatePlayersList(data.players);
+            playerCount.textContent = data.players.length;
+            hostNameEl.textContent = data.hostName;
         }
         
         // Закрываем все модальные окна
@@ -1722,6 +1771,11 @@ async function renderLocationsList() {
         chip.style.cssText = 'display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; margin: 4px; background: rgba(77,184,255,0.2); border-radius: 20px; font-size: 0.9rem; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; max-width: 100%;';
         const avatarUrl = await getLocationAvatarUrl(name);
         chip.innerHTML = `<img src="${avatarUrl}" alt="" style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover; flex-shrink: 0;" onerror="this.src='https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(name)}&backgroundColor=4db8ff'"> ${escapeHtmlForDisplay(name)}` + (isHost ? ' <button type="button" class="location-chip-remove" style="background:none;border:none;color:#ff6b6b;cursor:pointer;padding:0 4px;font-size:1rem;">&times;</button>' : '');
+        
+        // Make the location image clickable
+        const img = chip.querySelector('img');
+        makeLocationImageClickable(img);
+        
         const removeBtn = chip.querySelector('.location-chip-remove');
         if (removeBtn) {
             removeBtn.addEventListener('click', () => {
@@ -1847,6 +1901,26 @@ function updateTimerDisplay(timeLeft) {
     }
 }
 
+// Функция открытия модального окна просмотра картинки локации
+function openLocationImageViewer(imageSrc) {
+    if (locationImageViewerModal && locationImageViewerImage) {
+        locationImageViewerImage.src = imageSrc;
+        locationImageViewerModal.classList.add('active');
+        playSound('button');
+    }
+}
+
+// Функция добавления обработчика клика к картинке локации
+function makeLocationImageClickable(imgElement) {
+    if (imgElement) {
+        imgElement.style.cursor = 'pointer';
+        imgElement.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openLocationImageViewer(this.src);
+        });
+    }
+}
+
 // Функция создания напоминания о локации
 function createLocationReminder() {
     // Удаляем старое напоминание если есть
@@ -1866,13 +1940,17 @@ function createLocationReminder() {
                 <img src="${avatarUrl}" alt="" style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover; vertical-align: middle; margin: 0 6px;" onerror="this.style.display='none'">
                 <span>Локация: ${escapeHtmlForDisplay(currentLocation)}</span>
             `;
+            // Make the location image clickable
+            const img = locationReminder.querySelector('img');
+            makeLocationImageClickable(img);
         })();
         
         // Добавляем на страницу
         document.body.appendChild(locationReminder);
         
         // Показываем/скрываем при клике
-        locationReminder.addEventListener('click', function() {
+        locationReminder.addEventListener('click', function(e) {
+            if (e.target.tagName === 'IMG') return; // Don't minimize when clicking the image
             this.classList.toggle('minimized');
             if (this.classList.contains('minimized')) {
                 this.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
@@ -1885,6 +1963,9 @@ function createLocationReminder() {
                         <img src="${avatarUrl}" alt="" style="width: 20px; height: 20px; border-radius: 4px; object-fit: cover; vertical-align: middle; margin: 0 6px;" onerror="this.style.display='none'">
                         <span>Локация: ${escapeHtmlForDisplay(currentLocation)}</span>
                     `;
+                    // Make the location image clickable
+                    const img = this.querySelector('img');
+                    makeLocationImageClickable(img);
                 })();
                 this.style.padding = '10px 15px';
             }
@@ -1981,6 +2062,8 @@ function showFinalResults(data) {
         if (avatarEl) {
             avatarEl.src = avatarUrl;
             avatarEl.style.display = 'inline-block';
+            // Make the location image clickable
+            makeLocationImageClickable(avatarEl);
         }
     })();
     

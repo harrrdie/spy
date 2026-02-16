@@ -366,7 +366,7 @@
             <div id="finalResultsBody">
                 <!-- Содержимое модального окна -->
             </div>
-            <button id="closeFinalResults" class="btn-primary">Вернуться в лобби</button>
+            <button id="closeFinalResults" class="btn-primary">Играть снова в этой комнате</button>
         </div>
     </div>
 
@@ -414,6 +414,18 @@
                 </ul>
             </div>
             <button id="closeInfoAboutSiteBtn" class="btn-secondary">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для просмотра картинки локации -->
+    <div id="locationImageViewerModal" class="modal">
+        <div class="modal-content" style="max-width: 90%; max-height: 90vh; overflow: auto;">
+            <div style="position: relative; display: flex; justify-content: center; align-items: center;">
+                <img id="locationImageViewerImage" src="" alt="Картинка локации" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px;">
+                <button id="closeLocationImageViewer" class="modal-close-btn" style="position: absolute; top: -40px; right: 0; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer; padding: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
     </div>
 
