@@ -37,6 +37,7 @@ const createRoomBtn = document.getElementById('createRoom');
 const pasteCodeBtn = document.getElementById('pasteCode');
 const copyCodeBtn = document.getElementById('copyCode');
 const copyRoomLinkBtn = document.getElementById('copyRoomLink');
+const showRoomQrBtn = document.getElementById('showRoomQr');
 const leaveLobbyBtn = document.getElementById('leaveLobby');
 const startGameBtn = document.getElementById('startGame');
 const playersList = document.getElementById('playersList');
@@ -107,6 +108,14 @@ const finalResultsTitle = document.getElementById('finalResultsTitle');
 const finalResultsBody = document.getElementById('finalResultsBody');
 const finalResultsIcon = document.getElementById('finalResultsIcon');
 const closeFinalResultsBtn = document.getElementById('closeFinalResults');
+
+// QR-код приглашения
+const qrModal = document.getElementById('qrModal');
+const qrCodeContainer = document.getElementById('qrCodeContainer');
+const qrInviteLink = document.getElementById('qrInviteLink');
+const closeQrBtn = document.getElementById('closeQr');
+
+let roomQrInstance = null;
 
 const errorContainer = document.getElementById('errorContainer');
 const lobbyErrorContainer = document.getElementById('lobbyErrorContainer');
@@ -438,6 +447,18 @@ function setupEventListeners() {
     // Копировать ссылку на комнату
     if (copyRoomLinkBtn) {
         copyRoomLinkBtn.addEventListener('click', copyRoomCode);
+    }
+
+    // Показать QR-код приглашения
+    if (showRoomQrBtn && qrModal && qrCodeContainer && closeQrBtn) {
+        showRoomQrBtn.addEventListener('click', () => {
+            generateRoomQrCode();
+            qrModal.classList.add('active');
+        });
+
+        closeQrBtn.addEventListener('click', () => {
+            qrModal.classList.remove('active');
+        });
     }
     
     // Покинуть лобби
@@ -1117,6 +1138,35 @@ function copyRoomCode() {
     }
 }
 
+// Генерация QR-кода приглашения
+function generateRoomQrCode() {
+    if (!qrCodeContainer || !roomCodeDisplay) return;
+    const code = roomCodeDisplay.textContent;
+    if (!code || code === '----') return;
+
+    const url = window.location.origin + '/room/' + code;
+
+    // Обновляем текст ссылки
+    if (qrInviteLink) {
+        qrInviteLink.textContent = url;
+    }
+
+    // Очищаем предыдущий QR-код
+    qrCodeContainer.innerHTML = '';
+
+    // Если библиотека QRCode не загружена, просто выходим
+    if (typeof QRCode === 'undefined') return;
+
+    roomQrInstance = new QRCode(qrCodeContainer, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+}
+
 // Функция выхода из лобби
 function leaveLobby() {
     socket.emit('leave_room');
@@ -1462,7 +1512,8 @@ function closeAllModals() {
         questionModal,
         answerModal,
         voteModal,
-        spyGuessModal
+        spyGuessModal,
+        qrModal
         // finalResultsModal не закрываем, так как это окно результатов
     ];
     
