@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <title>Шпион | Онлайн-игра</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <!-- Контейнер для падающих эмодзи (для обоих тем) -->
+    <div class="emoji-rain"></div>
+    
+    <div class="container">
+        <header style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <h1><a href="/" style="color: inherit; text-decoration: none;"><i class="fas fa-user-secret"></i> ШПИОН</a></h1>
+            <div class="header-search" style="flex: 1; max-width: 280px; position: relative;">
+                <input type="text" id="headerSearch" placeholder="Поиск по юзернейму..." autocomplete="off" style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: inherit;">
+                <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none;"></i>
+                <div id="headerSearchResults" class="search-results-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: rgba(30,40,50,0.98); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; max-height: 280px; overflow-y: auto; z-index: 1000;"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div id="authLinks" style="display: flex; align-items: center; gap: 15px;">
+                    <div id="notificationsWrap" style="position: relative; display: none;">
+                        <button id="notificationsBell" class="sound-toggle-btn" title="Уведомления">
+                            <i class="fas fa-bell"></i>
+                            <span id="notificationsBadge">0</span>
+                        </button>
+                        <div id="notificationsDropdown" class="search-results-dropdown" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 4px; min-width: 320px; max-height: 400px; overflow-y: auto; background: rgba(20, 25, 35, 0.98) !important; border: 1px solid rgba(255,255,255,0.2) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;"></div>
+                    </div>
+                    <a href="/login" id="loginLink" style="color: #4db8ff; text-decoration: none;"><i class="fas fa-sign-in-alt"></i> Войти</a>
+                    <a href="/profile" id="profileLink" style="color: #4db8ff; text-decoration: none; display: none;"><i class="fas fa-user" style="margin-right: 6px;"></i><span id="userDisplayName">Профиль</span></a>
+                    <a href="/leaderboard" style="color: #4db8ff; text-decoration: none;"><i class="fas fa-trophy"></i> Рейтинг</a>
+                    <a href="#" id="logoutLink" style="color: #ff6b6b; text-decoration: none; display: none;">Выйти</a>
+                </div>
+                <div class="theme-toggle-container">
+                <!-- Кнопка отключения звуков -->
+                <button id="soundToggleBtn" class="sound-toggle-btn" title="Вкл/Выкл звуки">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <span class="theme-label">🌙</span>
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
+                <span class="theme-label">☀️</span>
+                <!-- Кнопка отключения падающих эмодзи -->
+                <button id="emojiToggleBtn" class="emoji-toggle-btn" title="Вкл/Выкл падающие эмодзи">
+                    <i class="fas fa-cloud-moon"></i>
+                </button>
+                <!-- Кнопка "О сайте" -->
+                <button id="infoAboutSiteBtn" class="sound-toggle-btn" title="О сайте и игре">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+            </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Экран подключения -->
+            <div id="connectionScreen" class="screen active">
+                <div class="card">
+                    <h2><i class="fas fa-gamepad"></i> Присоединиться к игре</h2>
+                    <div class="form-group" id="playerNameGroup">
+                        <label for="playerName">Ваше имя:</label>
+                        <input type="text" id="playerName" placeholder="Введите ваше имя" maxlength="20">
+                    </div>
+                    <div class="form-group" id="playerNameAuthGroup" style="display: none;">
+                        <label>Ваше имя:</label>
+                        <div id="playerNameDisplay" style="padding: 12px 15px; background: rgba(255,255,255,0.1); border-radius: 10px; font-weight: 600;"></div>
+                        <small style="color: #888;">Авторизованные игроки используют имя из профиля</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomCode">Код комнаты:</label>
+                        <div class="input-with-button">
+                            <input type="text" id="roomCode" placeholder="Введите код комнаты">
+                            <button id="pasteCode" class="icon-btn" title="Вставить из буфера">
+                                <i class="fas fa-paste"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="errorContainer" class="error-container"></div>
+                    <button id="joinRoom" class="btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Присоединиться
+                    </button>
+                    <div class="divider">
+                        <span>или</span>
+                    </div>
+                    <button id="createRoom" class="btn-secondary">
+                        <i class="fas fa-plus-circle"></i> Создать новую игру
+                    </button>
+                </div>
+            </div>
+
+            <!-- Лобби (ожидание игроков) -->
+            <div id="lobbyScreen" class="screen">
+                <div class="card">
+                    <h2><i class="fas fa-users"></i> Лобби игры</h2>
+                    <div class="room-info">
+                        <div class="room-code-display">
+                            <p>Код комнаты:</p>
+                            <div class="code-container">
+                                <strong id="roomCodeDisplay">----</strong>
+                                <button id="copyCode" class="icon-btn" title="Скопировать код комнаты">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button id="copyRoomLink" class="icon-btn" title="Скопировать ссылку на комнату">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="room-stats">
+                            <p><i class="fas fa-users"></i> Игроков: <span id="playerCount">0</span>/10</p>
+                            <p><i class="fas fa-crown"></i> Хост: <span id="hostName">-</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="game-settings">
+                        <h3><i class="fas fa-cog"></i> Настройки игры</h3>
+                        <div class="form-group">
+                            <label>Локации для игры:</label>
+                            <div id="locationsList" class="locations-chips"></div>
+                            <button type="button" id="addLocationBtn" class="btn-secondary" style="margin-top: 10px; width: auto;">
+                                <i class="fas fa-plus"></i> Добавить локацию
+                            </button>
+                        </div>
+                        <div id="lobbyErrorContainer" class="error-container"></div>
+                        <button id="startGame" class="btn-primary" disabled>
+                            <i class="fas fa-play"></i> Начать игру
+                        </button>
+                    </div>
+                    
+                    <div class="players-list">
+                        <h3><i class="fas fa-user-friends"></i> Игроки в лобби</h3>
+                        <ul id="playersList">
+                            <!-- Список игроков будет добавляться динамически -->
+                        </ul>
+                        <div id="inviteFriendsSection" style="margin-top: 15px; display: none;">
+                            <h4 style="margin-bottom: 10px;"><i class="fas fa-user-plus"></i> Пригласить друзей</h4>
+                            <div id="friendsToInviteList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                        </div>
+                    </div>
+                    
+                    <button id="leaveLobby" class="btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i> Покинуть лобби
+                    </button>
+                </div>
+            </div>
+
+            <!-- Модальное окно добавления локации -->
+            <div id="addLocationModal" class="modal">
+                <div class="modal-content">
+                    <h2><i class="fas fa-map-marker-alt"></i> Добавить локацию</h2>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="newLocationName">Название:</label>
+                            <input type="text" id="newLocationName" placeholder="Введите название локации">
+                        </div>
+                        <button type="button" id="addLocationConfirmBtn" class="btn-primary"><i class="fas fa-plus"></i> Добавить в игру</button>
+                        <div id="myLocationsSection" style="margin-top: 15px; display: none;">
+                            <p style="margin-bottom: 8px; color: #888;">Или выберите из сохранённых:</p>
+                            <div id="myLocationsList" class="locations-picker-list"></div>
+                        </div>
+                        <div id="addImagesToLocationSection" style="margin-top: 15px; display: none;">
+                            <p style="margin-bottom: 8px; color: #888;">Добавить картинки к локации:</p>
+                            <div class="form-group">
+                                <label>Загрузить файл:</label>
+                                <input type="file" id="locationImageFile" accept="image/*" style="margin-bottom: 8px;">
+                                <button type="button" id="uploadLocationImageBtn" class="btn-secondary" style="width: auto; margin-right: 8px;">Загрузить</button>
+                            </div>
+                            <div class="form-group">
+                                <label>Или вставить ссылку:</label>
+                                <input type="url" id="newLocationImageUrl" placeholder="Ссылка на картинку" style="margin-bottom: 8px;">
+                                <button type="button" id="addLocationImageUrlBtn" class="btn-secondary" style="width: auto; margin-right: 8px;">Добавить</button>
+                            </div>
+                            <button type="button" id="pickExistingImagesBtn" class="btn-secondary" style="width: auto;"><i class="fas fa-images"></i> Выбрать из существующих</button>
+                            <div id="existingImagesPicker" style="display: none; margin-top: 10px; max-height: 150px; overflow-y: auto;"></div>
+                            <button type="button" id="doneAddingImagesBtn" class="btn-primary" style="width: auto; margin-top: 10px;">Готово, закрыть</button>
+                        </div>
+                    </div>
+                    <button type="button" id="closeAddLocationBtn" class="btn-secondary">Отмена</button>
+                </div>
+            </div>
+
+            <!-- Экран игры -->
+            <div id="gameScreen" class="screen">
+                <div class="game-header">
+                    <div class="game-info">
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Локация: <strong id="locationHint">????</strong></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-user-tag"></i>
+                            <span>Ваша роль: <strong id="playerRole">Неизвестно</strong></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-user-clock"></i>
+                            <span>Ход: <strong id="currentTurn">-</strong></span>
+                        </div>
+                    </div>
+                    <div class="game-timer">
+                        <div class="timer-container">
+                            <i class="fas fa-clock"></i>
+                            <div class="timer-display">
+                                <span id="timer">60</span>
+                                <span class="timer-label">сек.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-content">
+                    <!-- Левый блок - Чат общения -->
+                    <div class="chat-section">
+                        <!-- Общий чат (свободное общение) -->
+                        <div class="social-chat">
+                            <h3><i class="fas fa-comments"></i> Общий чат</h3>
+                            <div class="chat-description">
+                                <p><i class="fas fa-info-circle"></i> Общайтесь свободно без ограничений</p>
+                            </div>
+                            <div class="chat-messages" id="socialChatMessages">
+                                <!-- Сообщения общего чата -->
+                            </div>
+                            <div class="chat-input">
+                                <input type="text" id="socialMessageInput" placeholder="Напишите сообщение...">
+                                <button id="sendSocialMessage">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Информация о ходе игры -->
+                        <div class="game-info-section">
+                            <h3><i class="fas fa-info-circle"></i> Информация о ходе</h3>
+                            <div class="turn-history" id="turnHistory">
+                                <!-- История ходов будет добавляться динамически -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Правый блок - Управление игрой -->
+                    <div class="game-controls">
+                        <div class="players-status">
+                            <h3><i class="fas fa-user-check"></i> Игроки онлайн</h3>
+                            <ul id="gamePlayersList">
+                                <!-- Список игроков в игре -->
+                            </ul>
+                        </div>
+                        
+                        <div class="spy-action" id="spyActionSection">
+                            <h3><i class="fas fa-user-secret"></i> Действие шпиона</h3>
+                            <p>Если вы шпион и угадали локацию, вы можете сразу завершить игру!</p>
+                            <button id="spyGuessBtn" class="btn-warning">
+                                <i class="fas fa-bullseye"></i> Угадать локацию
+                            </button>
+                        </div>
+                        
+                        <div class="early-vote">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Досрочное голосование</h3>
+                            <p>Если вы подозреваете шпиона, можете инициировать досрочное голосование</p>
+                            <button id="initiateVote" class="btn-danger">
+                                <i class="fas fa-hand-paper"></i> Инициировать голосование
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Игра "Шпион" | Онлайн-версия | Минимум 3 игрока</p>
+            <p class="connection-status" id="connectionStatus">
+                <i class="fas fa-wifi"></i> <span>Подключение к серверу...</span>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Модальное окно для выбора игрока -->
+    <div id="playerSelectModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Выберите игрока</h2>
+            <div class="modal-body">
+                <p id="modalDescription">Кому вы хотите задать вопрос?</p>
+                <div class="player-options" id="playerOptions">
+                    <!-- Варианты игроков будут добавляться динамически -->
+                </div>
+            </div>
+            <button id="cancelSelection" class="btn-secondary">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для вопроса -->
+    <div id="questionModal" class="modal">
+        <div class="modal-content">
+            <h2 id="questionModalTitle">Задайте вопрос</h2>
+            <div class="modal-body">
+                <p>Вы задаете вопрос игроку: <strong id="targetPlayerName">-</strong></p>
+                <div class="form-group">
+                    <label for="questionInput">Ваш вопрос:</label>
+                    <textarea id="questionInput" rows="3" placeholder="Введите ваш вопрос..."></textarea>
+                </div>
+            </div>
+            <button id="submitQuestion" class="btn-primary">Задать вопрос</button>
+            <button id="cancelQuestion" class="btn-secondary">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для ответа -->
+    <div id="answerModal" class="modal">
+        <div class="modal-content">
+            <h2>Ответьте на вопрос</h2>
+            <div class="modal-body">
+                <p>Вопрос от <strong id="askerPlayerName">-</strong>:</p>
+                <div class="question-display" id="questionDisplay">
+                    <!-- Вопрос будет отображаться здесь -->
+                </div>
+                <div class="form-group">
+                    <label for="answerInput">Ваш ответ:</label>
+                    <textarea id="answerInput" rows="3" placeholder="Введите ваш ответ..."></textarea>
+                </div>
+            </div>
+            <button id="submitAnswer" class="btn-primary">Ответить</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для голосования -->
+    <div id="voteModal" class="modal">
+        <div class="modal-content">
+            <h2>Голосование</h2>
+            <div class="modal-body">
+                <p id="voteDescription">Проголосуйте за игрока, который, по вашему мнению, является шпионом:</p>
+                <div class="player-options" id="votePlayerOptions">
+                    <!-- Варианты для голосования будут добавляться динамически -->
+                </div>
+            </div>
+            <button id="submitVote" class="btn-primary">Проголосовать</button>
+            <button id="cancelVote" class="btn-secondary">Пропустить</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно для угадывания локации шпионом -->
+    <div id="spyGuessModal" class="modal">
+        <div class="modal-content">
+            <h2>Угадайте локацию</h2>
+            <div class="modal-body">
+                <p>Выберите правильную локацию из 5 вариантов:</p>
+                <div class="player-options" id="spyGuessOptions">
+                    <!-- Варианты локаций будут добавляться динамически -->
+                </div>
+            </div>
+            <button id="closeSpyGuess" class="btn-secondary">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Финальное модальное окно результатов игры -->
+    <div id="finalResultsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon" id="finalResultsIcon"></div>
+            <h2 id="finalResultsTitle">Результаты игры</h2>
+            <div id="finalResultsBody">
+                <!-- Содержимое модального окна -->
+            </div>
+            <button id="closeFinalResults" class="btn-primary">Вернуться в лобби</button>
+        </div>
+    </div>
+
+    <!-- Аудио элементы -->
+    <audio id="buttonSound" preload="auto">
+        <source src="sounds/button.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="winSound" preload="auto">
+        <source src="sounds/win.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="loseSound" preload="auto">
+        <source src="sounds/lose.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Модальное окно "О сайте" -->
+    <div id="infoAboutSiteModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2><i class="fas fa-info-circle"></i> О сайте и игре</h2>
+            <div class="modal-body" style="text-align: left;">
+                <p><strong>Суть игры «Шпион»:</strong></p>
+                <p>Все игроки попадают на одну и ту же локацию, кроме одного — шпиона. Мирные жители знают локацию и задают друг другу вопросы, чтобы вычислить шпиона. Шпион не знает локацию и пытается не выдать себя. Игра заканчивается, когда шпиона вычислили (и он не угадал локацию) или шпион угадал локацию.</p>
+                <p style="margin-top: 12px;"><strong>Кнопки в шапке:</strong></p>
+                <ul style="margin: 8px 0 0 16px;">
+                    <li><i class="fas fa-sun"></i> / <i class="fas fa-moon"></i> — смена оформления (светлая/тёмная тема)</li>
+                    <li><i class="fas fa-volume-up"></i> — включение/отключение звуков игры</li>
+                    <li><i class="fas fa-cloud-moon"></i> — включение/отключение падающих эмодзи на фоне</li>
+                    <li><i class="fas fa-info-circle"></i> — эта подсказка</li>
+                </ul>
+            </div>
+            <button id="closeInfoAboutSiteBtn" class="btn-secondary">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

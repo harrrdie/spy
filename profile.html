@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <title>Профиль | Шпион - Онлайн-игра</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        .profile-page main { max-width: 900px; margin: 0 auto; }
+        .profile-header { display: flex; align-items: center; gap: 30px; margin-bottom: 30px; flex-wrap: wrap; }
+        .profile-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #4db8ff; flex-shrink: 0; }
+        .profile-info { flex: 1; min-width: 200px; }
+        .profile-info h2 { font-size: 1.8rem; margin-bottom: 5px; }
+        .profile-username { color: #888; font-size: 1rem; margin-bottom: 10px; }
+        .profile-like-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: 2px solid #ff6b6b; background: rgba(255,107,107,0.1); color: #ff6b6b; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .profile-like-btn:hover { background: rgba(255,107,107,0.2); transform: scale(1.02); }
+        .profile-like-btn.liked { background: #ff6b6b; color: white; }
+        .profile-like-count { font-size: 1.2rem; }
+        .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-card .value { font-size: 2rem; font-weight: 700; color: #4db8ff; display: block; }
+        .stat-card .label { font-size: 0.9rem; color: #aaa; margin-top: 5px; }
+        .comment { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #4db8ff; }
+        .comment-author { font-weight: 600; color: #4db8ff; margin-bottom: 5px; }
+        .comment-author a { color: inherit; text-decoration: none; }
+        .comment-author a:hover { text-decoration: underline; }
+        .comment-text { margin-bottom: 5px; line-height: 1.5; }
+        .comment-date { font-size: 0.85rem; color: #888; }
+        .comment-form { margin-top: 20px; }
+        .comment-form textarea { min-height: 80px; }
+        .profile-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .edit-btn { padding: 8px 16px; font-size: 0.9rem; width: auto; }
+        .friends-section, .achievements-section { margin-top: 25px; }
+        .friends-grid, .achievements-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
+        .friend-card, .achievement-badge { display: flex; align-items: center; gap: 12px; padding: 12px 18px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .friend-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .achievement-badge i { font-size: 2rem; color: #ffd700; }
+        .light-theme .stat-card { background: #f8fafc !important; border-color: #e9ecef !important; }
+        .light-theme .stat-card .value { color: #3498db !important; }
+        .light-theme .comment { background: #f8fafc !important; border-left-color: #3498db !important; }
+        .light-theme .friend-card, .light-theme .achievement-badge { background: #f8fafc !important; border-color: #e9ecef !important; }
+        .light-theme .profile-like-btn { border-color: #e74c3c; color: #e74c3c; }
+        .light-theme .profile-like-btn.liked { background: #e74c3c; color: white; }
+        .avatar-picker { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+        .avatar-picker img { width: 48px; height: 48px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; }
+        .avatar-picker img.selected { border-color: #4db8ff; }
+        .profile-page .card h3:not(:first-of-type) { margin-top: 32px; }
+        .comment-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .comment-actions .comment-edit-btn,
+        .comment-actions .comment-delete-btn {
+            background: transparent;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: none;
+            animation: none;
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .comment-actions .comment-edit-btn { color: #4db8ff; }
+        .comment-actions .comment-delete-btn { color: #ff6b6b; }
+        .comment-edit-area { margin-top: 8px; }
+        .comment-edit-area textarea {
+            min-height: 70px;
+            resize: vertical;
+        }
+        .comment-edit-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body class="dark-theme profile-page">
+    <div class="emoji-rain"></div>
+    <div class="container">
+        <header style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <h1><a href="/" style="color: inherit; text-decoration: none;"><i class="fas fa-user-secret"></i> ШПИОН</a></h1>
+            <div class="header-search" style="flex: 1; max-width: 260px; position: relative;">
+                <input type="text" id="headerSearch" placeholder="Поиск по юзернейму..." autocomplete="off" style="width: 100%; padding: 8px 12px 8px 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: inherit;">
+                <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+                <div id="headerSearchResults" class="search-results-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: rgba(30,40,50,0.98); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; max-height: 260px; overflow-y: auto; z-index: 1000;"></div>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <div id="notificationsWrap" style="position: relative;">
+                        <button id="notificationsBell" class="sound-toggle-btn" title="Уведомления">
+                            <i class="fas fa-bell"></i>
+                            <span id="notificationsBadge">0</span>
+                        </button>
+                    </div>
+                    <a href="/" style="color: #4db8ff; text-decoration: none;"><i class="fas fa-gamepad"></i> Играть</a>
+                    <span id="headerAuth"></span>
+                </div>
+                <div class="theme-toggle-container">
+                    <button id="soundToggleBtn" class="sound-toggle-btn" title="Вкл/Выкл звуки">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <span class="theme-label">🌙</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="theme-label">☀️</span>
+                    <button id="emojiToggleBtn" class="emoji-toggle-btn" title="Вкл/Выкл падающие эмодзи">
+                        <i class="fas fa-cloud-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div id="profileLoading" class="card" style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: #4db8ff;"></i>
+                <p style="margin-top: 15px;">Загрузка профиля...</p>
+            </div>
+            <div id="profileContent" style="display: none;">
+                <div class="card">
+                    <div class="profile-header">
+                        <div style="position: relative;">
+                            <img id="profileAvatar" class="profile-avatar" src="" alt="Аватар" style="cursor: pointer;" title="Нажмите для смены аватара">
+                            <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="profile-info">
+                            <h2 id="profileDisplayName">-</h2>
+                            <div class="profile-username" id="profileUsername">@username</div>
+                            <div class="profile-actions" id="profileActions" style="display: none;">
+                                <button class="btn-secondary edit-btn" id="editProfileBtn"><i class="fas fa-edit"></i> Редактировать</button>
+                            </div>
+                            <div id="profileActionsOther" style="display: none;">
+                                <button class="profile-like-btn" id="likeProfileBtn"><i class="fas fa-heart"></i> <span id="likeBtnText">Нравится</span> <span class="profile-like-count" id="likeCount">0</span></button>
+                                <button class="btn-secondary edit-btn" id="addFriendBtn"><i class="fas fa-user-plus"></i> В друзья</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3><i class="fas fa-chart-bar"></i> Статистика</h3>
+                    <div class="profile-stats">
+                        <div class="stat-card">
+                            <div class="value" id="statGamesPlayed">0</div>
+                            <div class="label">Игр сыграно</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="statWonSpy">0</div>
+                            <div class="label">Побед за шпиона</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="statWonCivilian">0</div>
+                            <div class="label">Побед за мирного</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="statLost">0</div>
+                            <div class="label">Поражений</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" id="statRating">1000</div>
+                            <div class="label">Рейтинг</div>
+                        </div>
+                    </div>
+
+                    <h3><i class="fas fa-user-friends"></i> Друзья</h3>
+                    <div id="friendsList" class="friends-grid"></div>
+
+                    <h3><i class="fas fa-trophy"></i> Достижения</h3>
+                    <div id="achievementsList" class="achievements-grid"></div>
+
+                    <h3><i class="fas fa-comments"></i> Комментарии</h3>
+                    <div id="commentsList"></div>
+                    <div class="comment-form" id="commentForm" style="display: none;">
+                        <div class="form-group">
+                            <textarea id="commentInput" placeholder="Напишите комментарий..." maxlength="500"></textarea>
+                            <small><span id="commentCount">0</span>/500</small>
+                        </div>
+                        <button class="btn-primary" id="submitCommentBtn"><i class="fas fa-paper-plane"></i> Отправить</button>
+                    </div>
+                </div>
+            </div>
+            <div id="profileNotFound" style="display: none;" class="card">
+                <h2>Профиль не найден</h2>
+                <p>Пользователь с таким ID не существует.</p>
+                <a href="/" class="btn-primary" style="display: inline-block; width: auto; margin-top: 15px;">На главную</a>
+            </div>
+        </main>
+
+        <footer>
+            <p>Игра "Шпион" | Профиль</p>
+        </footer>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>Редактирование профиля</h2>
+            <div class="form-group">
+                <label>Отображаемое имя:</label>
+                <input type="text" id="editDisplayName" placeholder="Имя для отображения">
+            </div>
+            <div class="form-group">
+                <label>Текущий пароль (для смены):</label>
+                <input type="password" id="editCurrentPassword" placeholder="Оставьте пустым, если не меняете пароль">
+            </div>
+            <div class="form-group">
+                <label>Новый пароль:</label>
+                <input type="password" id="editNewPassword" placeholder="Не менее 6 символов">
+            </div>
+            <div class="form-group">
+                <label>Повторите новый пароль:</label>
+                <input type="password" id="editNewPasswordConfirm" placeholder="Повторите">
+            </div>
+            <div id="editPasswordError" class="error-container" style="display: none;"></div>
+            <button class="btn-primary" id="saveProfileBtn">Сохранить</button>
+            <button class="btn-secondary" id="closeEditBtn">Отмена</button>
+        </div>
+    </div>
+
+    <script src="/header.js"></script>
+    <script src="/profile.js"></script>
+</body>
+</html>

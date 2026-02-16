@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | Шпион - Онлайн-игра</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        .auth-container { max-width: 420px; margin: 60px auto; }
+        .auth-tabs { display: flex; gap: 0; margin-bottom: 25px; }
+        .auth-tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; border-radius: 10px 10px 0 0; transition: all 0.3s; }
+        .auth-tab.active { background: rgba(77, 184, 255, 0.2); border: 1px solid rgba(77, 184, 255, 0.5); }
+        .auth-tab:not(.active) { background: rgba(255,255,255,0.05); }
+        .auth-tab:hover:not(.active) { background: rgba(255,255,255,0.1); }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .auth-nav { text-align: center; margin-top: 20px; }
+        .auth-nav a { color: #4db8ff; text-decoration: none; }
+        .auth-nav a:hover { text-decoration: underline; }
+        .back-home { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; color: #4db8ff; text-decoration: none; }
+        .back-home:hover { text-decoration: underline; }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="emoji-rain"></div>
+    <div class="container">
+        <header style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <h1 style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-user-secret"></i> ШПИОН
+            </h1>
+            <div style="flex: 1;"></div>
+            <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> На главную</a>
+            <div class="theme-toggle-container">
+                <button id="soundToggleBtn" class="sound-toggle-btn" title="Вкл/Выкл звуки">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <span class="theme-label">🌙</span>
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider"></span>
+                </label>
+                <span class="theme-label">☀️</span>
+                <button id="emojiToggleBtn" class="emoji-toggle-btn" title="Вкл/Выкл падающие эмодзи">
+                    <i class="fas fa-cloud-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="auth-container">
+                <div class="card">
+                    <div class="auth-tabs">
+                        <div class="auth-tab active" data-tab="login">Вход</div>
+                        <div class="auth-tab" data-tab="register">Регистрация</div>
+                    </div>
+
+                    <!-- Форма входа -->
+                    <form id="loginForm" class="auth-form active">
+                        <h2><i class="fas fa-sign-in-alt"></i> Вход в аккаунт</h2>
+                        <div class="form-group">
+                            <label for="loginUsername">Логин:</label>
+                            <input type="text" id="loginUsername" placeholder="Введите логин" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Пароль:</label>
+                            <input type="password" id="loginPassword" placeholder="Введите пароль" required>
+                        </div>
+                        <div id="loginError" class="error-container"></div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Войти
+                        </button>
+                    </form>
+
+                    <!-- Форма регистрации -->
+                    <form id="registerForm" class="auth-form">
+                        <h2><i class="fas fa-user-plus"></i> Регистрация</h2>
+                        <div class="form-group">
+                            <label for="regUsername">Логин:</label>
+                            <input type="text" id="regUsername" placeholder="Придумайте логин (3-20 символов)" minlength="3" maxlength="20" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">Пароль:</label>
+                            <input type="password" id="regPassword" placeholder="Придумайте пароль (мин. 6 символов)" minlength="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPasswordConfirm">Подтвердите пароль:</label>
+                            <input type="password" id="regPasswordConfirm" placeholder="Повторите пароль" required>
+                        </div>
+                        <div id="registerError" class="error-container"></div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-user-plus"></i> Зарегистрироваться
+                        </button>
+                    </form>
+
+                    <div class="auth-nav">
+                        <p>Играть без аккаунта? <a href="/">Перейти к игре</a></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Игра "Шпион" | Вход и регистрация</p>
+        </footer>
+    </div>
+
+    <script src="/header.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>
