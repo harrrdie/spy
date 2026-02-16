@@ -23,11 +23,19 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Доверяем прокси (Render и другие PaaS используют прокси перед Node-сервером)
+app.set('trust proxy', 1);
+
 app.use(session({
-    secret: 'spy-game-secret-key-2024',
+    secret: process.env.SESSION_SECRET || 'spy-game-secret-key-2024',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 }
+    cookie: {
+        // В проде (на Render) куки будут только по HTTPS
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    }
 }));
 
 // Данные игровых комнат
