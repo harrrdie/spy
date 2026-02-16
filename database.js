@@ -30,6 +30,21 @@ function initDatabase() {
         )
     `);
 
+    // История игр (для графиков и последних матчей)
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS game_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            played_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            role TEXT NOT NULL,              -- 'spy' или 'civilian'
+            result TEXT NOT NULL,            -- 'win' или 'loss'
+            rating_before INTEGER NOT NULL,
+            rating_after INTEGER NOT NULL,
+            location TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `);
+
     // Таблица комментариев на профилях
     db.exec(`
         CREATE TABLE IF NOT EXISTS profile_comments (
@@ -152,6 +167,7 @@ function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_comments_author ON profile_comments(author_user_id);
         CREATE INDEX IF NOT EXISTS idx_friends_user ON friends(user_id);
         CREATE INDEX IF NOT EXISTS idx_friends_friend ON friends(friend_id);
+        CREATE INDEX IF NOT EXISTS idx_game_history_user ON game_history(user_id, played_at DESC);
     `);
 }
 

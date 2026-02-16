@@ -34,7 +34,7 @@ async function loadProfile() {
             return;
         }
 
-        const { user, stats, comments, likeCount, isLiked, friends, achievements, isFriend, friendRequestSent, friendRequestPending } = data;
+        const { user, stats, comments, likeCount, isLiked, friends, achievements, recentGames, isFriend, friendRequestSent, friendRequestPending } = data;
         const currentUser = await fetch('/api/auth/me', { credentials: 'same-origin' }).then(r => r.json()).then(d => d.user);
         const isOwnProfile = currentUser && currentUser.id === user.id;
 
@@ -48,6 +48,9 @@ async function loadProfile() {
         document.getElementById('statLost').textContent = stats.games_lost || 0;
         const statRating = document.getElementById('statRating');
         if (statRating) statRating.textContent = stats.rating ?? 0;
+
+        // История последних игр — квадраты Ш/М с рейтингом
+        renderRecentGamesBoxes(recentGames || []);
 
         // Лайки
         const likeBtn = document.getElementById('likeProfileBtn');
@@ -202,6 +205,16 @@ async function loadProfile() {
         }
         if (isOwnProfile) {
             document.getElementById('profileActions').style.display = 'flex';
+            const ownSummary = document.getElementById('ownLikesSummary');
+            const ownLikeCountEl = document.getElementById('ownLikeCount');
+            if (ownSummary && ownLikeCountEl) {
+                ownSummary.style.display = 'block';
+                ownLikeCountEl.textContent = likeCount || 0;
+                ownLikeCountEl.onclick = (e) => {
+                    e.stopPropagation();
+                    openLikesModal(user.id);
+                };
+            }
         }
 
         document.getElementById('profileLoading').style.display = 'none';
@@ -270,45 +283,9 @@ function setupEventListeners(user, isOwnProfile, state) {
     // Открыть модальное окно лайков при клике на количество
     const likeCountEl = document.getElementById('likeCount');
     if (likeCountEl) {
-        likeCountEl.addEventListener('click', async (e) => {
+        likeCountEl.addEventListener('click', (e) => {
             e.stopPropagation();
-            const likesModal = document.getElementById('likesModal');
-            const likesLoading = document.getElementById('likesLoading');
-            const likesList = document.getElementById('likesList');
-            
-            if (!likesModal) return;
-            
-            likesModal.classList.add('active');
-            likesLoading.style.display = 'block';
-            likesList.innerHTML = '';
-            
-            try {
-                const res = await fetch(`/api/profile/${user.id}/likes`);
-                const data = await res.json();
-                likesLoading.style.display = 'none';
-                
-                if (data.success && data.likers && data.likers.length > 0) {
-                    likesList.innerHTML = '';
-                    data.likers.forEach(liker => {
-                        const a = document.createElement('a');
-                        a.href = `/profile/${liker.id}`;
-                        a.className = 'like-item';
-                        a.innerHTML = `
-                            <img src="${getAvatarUrl(liker.avatar_seed)}" alt="" class="like-item-avatar">
-                            <div class="like-item-info">
-                                <div class="like-item-name">${escapeHtml(liker.display_name)}</div>
-                                <div class="like-item-username">@${escapeHtml(liker.username)}</div>
-                            </div>
-                        `;
-                        likesList.appendChild(a);
-                    });
-                } else {
-                    likesList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Никто еще не лайкнул профиль</p>';
-                }
-            } catch (e) {
-                likesLoading.style.display = 'none';
-                likesList.innerHTML = '<p style="color: #ff6b6b; text-align: center; padding: 20px;">Ошибка загрузки</p>';
-            }
+            openLikesModal(user.id);
         });
     }
 
@@ -561,6 +538,46 @@ function setupEventListeners(user, isOwnProfile, state) {
     }
 }
 
+async function openLikesModal(profileUserId) {
+    const likesModal = document.getElementById('likesModal');
+    const likesLoading = document.getElementById('likesLoading');
+    const likesList = document.getElementById('likesList');
+    
+    if (!likesModal || !likesLoading || !likesList) return;
+    
+    likesModal.classList.add('active');
+    likesLoading.style.display = 'block';
+    likesList.innerHTML = '';
+    
+    try {
+        const res = await fetch(`/api/profile/${profileUserId}/likes`);
+        const data = await res.json();
+        likesLoading.style.display = 'none';
+        
+        if (data.success && data.likers && data.likers.length > 0) {
+            likesList.innerHTML = '';
+            data.likers.forEach(liker => {
+                const a = document.createElement('a');
+                a.href = `/profile/${liker.id}`;
+                a.className = 'like-item';
+                a.innerHTML = `
+                    <img src="${getAvatarUrl(liker.avatar_seed)}" alt="" class="like-item-avatar">
+                    <div class="like-item-info">
+                        <div class="like-item-name">${escapeHtml(liker.display_name)}</div>
+                        <div class="like-item-username">@${escapeHtml(liker.username)}</div>
+                    </div>
+                `;
+                likesList.appendChild(a);
+            });
+        } else {
+            likesList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">Никто еще не лайкнул профиль</p>';
+        }
+    } catch (e) {
+        likesLoading.style.display = 'none';
+        likesList.innerHTML = '<p style="color: #ff6b6b; text-align: center; padding: 20px;">Ошибка загрузки</p>';
+    }
+}
+
 async function updateHeaderAuth() {
     const el = document.getElementById('headerAuth');
     if (!el) return;
@@ -607,6 +624,44 @@ async function updateHeaderAuth() {
             </div>
         `;
     }
+}
+
+// Последние 10 игр в виде квадратов "Ш +25 / М -15"
+function renderRecentGamesBoxes(recentGames) {
+    const boxesEl = document.getElementById('recentGamesBoxes');
+    if (!boxesEl) return;
+
+    boxesEl.innerHTML = '';
+
+    if (!recentGames || recentGames.length === 0) {
+        const emptyBox = document.createElement('div');
+        emptyBox.className = 'recent-game-box empty';
+        emptyBox.textContent = 'нет игр';
+        boxesEl.appendChild(emptyBox);
+        return;
+    }
+
+    // Берём максимум 10 последних, от самой старой к самой новой, чтобы последовательность читалась слева направо
+    const ordered = [...recentGames]
+        .sort((a, b) => new Date(a.played_at) - new Date(b.played_at))
+        .slice(-10);
+
+    ordered.forEach(g => {
+        const box = document.createElement('div');
+        const isWin = g.result === 'win';
+        box.className = 'recent-game-box ' + (isWin ? 'win' : 'loss');
+
+        const roleLetter = g.role === 'spy' ? 'Ш' : 'М';
+        const delta = g.rating_after - g.rating_before;
+        const deltaStr = (delta > 0 ? '+' : '') + delta;
+
+        box.innerHTML = `
+            <span class="role-letter">${roleLetter}</span>
+            <span>${deltaStr}</span>
+        `;
+
+        boxesEl.appendChild(box);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1174,7 +1174,8 @@ function endGame(room, spyWins) {
                 const won = (wasSpy && spyWins) || (!wasSpy && !spyWins);
                 const stats = db.prepare('SELECT * FROM user_stats WHERE user_id = ?').get(player.userId);
                 const delta = won ? 25 : -15;
-                const newRating = Math.max(0, (stats?.rating ?? 0) + delta);
+                const ratingBefore = stats?.rating ?? 0;
+                const newRating = Math.max(0, ratingBefore + delta);
                 if (stats) {
                     db.prepare(`
                         UPDATE user_stats SET 
@@ -1200,6 +1201,24 @@ function endGame(room, spyWins) {
                         newRating
                     );
                 }
+
+                // Сохраняем игру в историю для графиков/статистики
+                try {
+                    db.prepare(`
+                        INSERT INTO game_history (user_id, role, result, rating_before, rating_after, location)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    `).run(
+                        player.userId,
+                        wasSpy ? 'spy' : 'civilian',
+                        won ? 'win' : 'loss',
+                        ratingBefore,
+                        newRating,
+                        room.currentLocation || null
+                    );
+                } catch (e) {
+                    console.error('Ошибка записи истории игры:', e);
+                }
+
                 checkAndGrantAchievements(player.userId);
             }
         });

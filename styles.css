@@ -1974,7 +1974,18 @@ footer {
         max-width: 100% !important;
     }
 
-    .theme-toggle-container {
+    .header-right {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .header-right #authLinks {
+        flex-wrap: wrap;
+    }
+
+    .header-right .theme-toggle-container {
         align-self: stretch;
         justify-content: space-between;
         width: 100%;

@@ -28,12 +28,11 @@ const DEFAULT_LOCATIONS = [
     'Парк развлечений', 'Гостиница', 'Университет', 'Бассейн', 'Горнолыжный курорт'
 ];
 
-// Список локаций для выбора (дефолтные + пользовательские текущего пользователя)
+// Список локаций для выбора (дефолтные + пользовательские всех пользователей)
 router.get('/', (req, res) => {
     try {
-        const custom = req.session.userId
-            ? db.prepare('SELECT id, name FROM user_locations WHERE user_id = ? ORDER BY name').all(req.session.userId)
-            : [];
+        // Отдаем все пользовательские локации (имена могут повторяться у разных людей, это нормально)
+        const custom = db.prepare('SELECT id, name FROM user_locations ORDER BY created_at DESC LIMIT 500').all();
         res.json({
             default: DEFAULT_LOCATIONS,
             custom: custom

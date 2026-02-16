@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
         .profile-page main { max-width: 900px; margin: 0 auto; }
         .profile-header { display: flex; align-items: center; gap: 30px; margin-bottom: 30px; flex-wrap: wrap; }
@@ -82,30 +83,35 @@
             overflow-y: auto;
         }
         .likes-list {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 12px;
+            padding-top: 8px;
         }
         .like-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
+            padding: 10px 12px;
+            background: radial-gradient(circle at top left, rgba(77,184,255,0.18), transparent 55%);
+            border-radius: 12px;
             text-decoration: none;
             color: inherit;
-            transition: all 0.3s;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .like-item:hover {
-            background: rgba(77, 184, 255, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.3);
+            background: radial-gradient(circle at top left, rgba(77,184,255,0.28), transparent 55%);
         }
         .like-item-avatar {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
             flex-shrink: 0;
+            border: 2px solid rgba(77,184,255,0.6);
         }
         .like-item-info {
             flex: 1;
@@ -113,19 +119,73 @@
         .like-item-name {
             font-weight: 600;
             color: #4db8ff;
+            margin-bottom: 2px;
         }
         .like-item-username {
-            font-size: 0.85rem;
-            color: #888;
+            font-size: 0.8rem;
+            color: #aaa;
         }
         .light-theme .like-item {
-            background: #f8fafc;
+            background: #ffffff;
+            border-color: #e9ecef;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         }
         .light-theme .like-item:hover {
-            background: #e3f2fd;
+            background: #f1f7ff;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
         }
         .light-theme .like-item-name {
             color: #3498db;
+        }
+        .recent-games-section {
+            margin-top: 25px;
+        }
+        .recent-games-legend {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        .recent-games-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .recent-game-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        }
+        .recent-game-box span {
+            line-height: 1.1;
+        }
+        .recent-game-box .role-letter {
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+        .recent-game-box.win {
+            background: linear-gradient(135deg, rgba(76,217,100,0.95), rgba(46,204,113,0.9));
+            color: #fff;
+        }
+        .recent-game-box.loss {
+            background: linear-gradient(135deg, rgba(255,107,107,0.95), rgba(231,76,60,0.9));
+            color: #fff;
+        }
+        .recent-game-box.empty {
+            background: rgba(255,255,255,0.05);
+            color: #888;
+            box-shadow: none;
+        }
+        .light-theme .recent-game-box.empty {
+            background: #f8fafc;
+            border: 1px dashed #e1e5ea;
+            color: #b0b7c3;
         }
     </style>
 </head>
@@ -189,6 +249,9 @@
                                 <button class="profile-like-btn" id="likeProfileBtn"><i class="fas fa-heart"></i> <span id="likeBtnText">Нравится</span> <span class="profile-like-count" id="likeCount" style="cursor: pointer;" title="Нажмите, чтобы увидеть, кто это лайкнул">0</span></button>
                                 <button class="btn-secondary edit-btn" id="addFriendBtn"><i class="fas fa-user-plus"></i> В друзья</button>
                             </div>
+                            <div id="ownLikesSummary" style="display:none; margin-top:8px; font-size:0.9rem; color:#888;">
+                                <span>Лайков на профиле: <strong id="ownLikeCount" style="cursor:pointer; text-decoration:underline;">0</strong></span>
+                            </div>
                         </div>
                     </div>
 
@@ -214,6 +277,12 @@
                             <div class="value" id="statRating">1000</div>
                             <div class="label">Рейтинг</div>
                         </div>
+                    </div>
+
+                    <div class="recent-games-section">
+                        <h3><i class="fas fa-history"></i> Последние 10 игр</h3>
+                        <p class="recent-games-legend">Ш — шпион, М — мирный житель. Цвет квадрата: зелёный — победа, красный — поражение.</p>
+                        <div class="recent-games-boxes" id="recentGamesBoxes"></div>
                     </div>
 
                     <h3><i class="fas fa-user-friends"></i> Друзья</h3>

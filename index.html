@@ -21,7 +21,7 @@
                 <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none;"></i>
                 <div id="headerSearchResults" class="search-results-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: rgba(30,40,50,0.98); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; max-height: 280px; overflow-y: auto; z-index: 1000;"></div>
             </div>
-            <div style="display: flex; align-items: center; gap: 20px;">
+            <div class="header-right" style="display: flex; align-items: center; gap: 20px;">
                 <div id="authLinks" style="display: flex; align-items: center; gap: 15px;">
                     <div id="notificationsWrap" style="position: relative; display: none;">
                         <button id="notificationsBell" class="sound-toggle-btn" title="Уведомления">
@@ -35,26 +35,26 @@
                     <a href="/leaderboard" style="color: #4db8ff; text-decoration: none;"><i class="fas fa-trophy"></i> Рейтинг</a>
                     <a href="#" id="logoutLink" style="color: #ff6b6b; text-decoration: none; display: none;">Выйти</a>
                 </div>
-                <div class="theme-toggle-container">
-                <!-- Кнопка отключения звуков -->
-                <button id="soundToggleBtn" class="sound-toggle-btn" title="Вкл/Выкл звуки">
-                    <i class="fas fa-volume-up"></i>
-                </button>
-                <span class="theme-label">🌙</span>
-                <label class="switch">
-                    <input type="checkbox" id="themeToggle">
-                    <span class="slider"></span>
-                </label>
-                <span class="theme-label">☀️</span>
-                <!-- Кнопка отключения падающих эмодзи -->
-                <button id="emojiToggleBtn" class="emoji-toggle-btn" title="Вкл/Выкл падающие эмодзи">
-                    <i class="fas fa-cloud-moon"></i>
-                </button>
-                <!-- Кнопка "О сайте" -->
-                <button id="infoAboutSiteBtn" class="sound-toggle-btn" title="О сайте и игре">
-                    <i class="fas fa-info-circle"></i>
-                </button>
-            </div>
+                <div class="theme-toggle-container" style="margin-top: 4px;">
+                    <!-- Кнопка отключения звуков -->
+                    <button id="soundToggleBtn" class="sound-toggle-btn" title="Вкл/Выкл звуки">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <span class="theme-label">🌙</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="theme-label">☀️</span>
+                    <!-- Кнопка отключения падающих эмодзи -->
+                    <button id="emojiToggleBtn" class="emoji-toggle-btn" title="Вкл/Выкл падающие эмодзи">
+                        <i class="fas fa-cloud-moon"></i>
+                    </button>
+                    <!-- Кнопка "О сайте" -->
+                    <button id="infoAboutSiteBtn" class="sound-toggle-btn" title="О сайте и игре">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
             </div>
         </header>
 

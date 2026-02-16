@@ -137,6 +137,15 @@ router.get('/:id', (req, res) => {
             WHERE ua.user_id = ?
         `).all(userId);
 
+        // Последние 10 игр для графиков и истории
+        const recentGames = db.prepare(`
+            SELECT id, played_at, role, result, rating_before, rating_after, location
+            FROM game_history
+            WHERE user_id = ?
+            ORDER BY played_at DESC
+            LIMIT 10
+        `).all(userId);
+
         const isFriend = req.session.userId ? (() => {
             const r = db.prepare(`
                 SELECT 1 FROM friends 
@@ -167,6 +176,7 @@ router.get('/:id', (req, res) => {
             isLiked: !!isLiked,
             friends,
             achievements,
+            recentGames,
             isFriend,
             friendRequestSent,
             friendRequestPending
