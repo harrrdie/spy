@@ -112,10 +112,9 @@ const closeFinalResultsBtn = document.getElementById('closeFinalResults');
 // QR-код приглашения
 const qrModal = document.getElementById('qrModal');
 const qrCodeContainer = document.getElementById('qrCodeContainer');
+const qrCodeImage = document.getElementById('qrCodeImage');
 const qrInviteLink = document.getElementById('qrInviteLink');
 const closeQrBtn = document.getElementById('closeQr');
-
-let roomQrInstance = null;
 
 const errorContainer = document.getElementById('errorContainer');
 const lobbyErrorContainer = document.getElementById('lobbyErrorContainer');
@@ -1138,33 +1137,22 @@ function copyRoomCode() {
     }
 }
 
-// Генерация QR-кода приглашения
+// Генерация QR-кода приглашения (серверный PNG)
 function generateRoomQrCode() {
-    if (!qrCodeContainer || !roomCodeDisplay) return;
+    if (!qrCodeContainer || !qrCodeImage || !roomCodeDisplay) return;
     const code = roomCodeDisplay.textContent;
     if (!code || code === '----') return;
 
-    const url = window.location.origin + '/room/' + code;
+    const inviteUrl = window.location.origin + '/room/' + code;
+    const qrUrl = `/api/room/${encodeURIComponent(code)}/qr`;
 
     // Обновляем текст ссылки
     if (qrInviteLink) {
-        qrInviteLink.textContent = url;
+        qrInviteLink.textContent = inviteUrl;
     }
 
-    // Очищаем предыдущий QR-код
-    qrCodeContainer.innerHTML = '';
-
-    // Если библиотека QRCode не загружена, просто выходим
-    if (typeof QRCode === 'undefined') return;
-
-    roomQrInstance = new QRCode(qrCodeContainer, {
-        text: url,
-        width: 200,
-        height: 200,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
+    // Устанавливаем src PNG-QR с сервера
+    qrCodeImage.src = qrUrl;
 }
 
 // Функция выхода из лобби

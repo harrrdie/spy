@@ -5,6 +5,7 @@ const path = require('path');
 const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
+const QRCode = require('qrcode');
 
 const app = express();
 const server = http.createServer(app);
@@ -98,6 +99,38 @@ app.get('/leaderboard', (req, res) => {
 });
 app.get('/room/:code', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// QR-код приглашения в комнату
+app.get('/api/room/:code/qr', async (req, res) => {
+    try {
+        const roomCode = (req.params.code || '').toUpperCase();
+        if (!roomCode) {
+            return res.status(400).send('Room code is required');
+        }
+
+        // Строим публичный URL комнаты
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers.host;
+        const inviteUrl = `${protocol}://${host}/room/${roomCode}`;
+
+        const pngBuffer = await QRCode.toBuffer(inviteUrl, {
+            type: 'png',
+            width: 300,
+            margin: 1,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        });
+
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.send(pngBuffer);
+    } catch (err) {
+        console.error('Ошибка генерации QR-кода:', err);
+        res.status(500).send('Failed to generate QR code');
+    }
 });
 
 // Генерация случайного кода комнаты
