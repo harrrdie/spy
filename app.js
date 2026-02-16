@@ -745,15 +745,15 @@ function setupEventListeners() {
             // Явно скрываем фон модального окна
             finalResultsModal.style.display = 'none';
             
-            // Возвращаемся на главную
+            // Возвращаемся на главную страницу
             setTimeout(() => {
                 // Проверяем, что игрок все еще в игре
                 if (roomCode && playerId) {
                     // Отправляем команду о выходе
                     socket.emit('leave_room');
-                    showScreen('connectionScreen');
-                    addSystemMessage('Игра завершена. Вы вернулись на главную.');
                 }
+                // Перенаправляем на главную страницу
+                window.location.href = window.location.origin + '/';
             }, 100);
         });
     }
@@ -1301,7 +1301,13 @@ function showPlayerSelectModal(description, availablePlayers) {
     if (playerRole !== 'spy' && currentLocation) {
         (async () => {
             const avatarUrl = await getLocationAvatarUrl(currentLocation);
-            modalDescription.innerHTML += `<br><small><i class="fas fa-map-marker-alt"></i> Локация: <img src="${avatarUrl}" alt="" style="width: 16px; height: 16px; border-radius: 3px; object-fit: cover; vertical-align: middle; margin: 0 4px;" onerror="this.style.display='none'"> <strong>${escapeHtmlForDisplay(currentLocation)}</strong></small>`;
+            modalDescription.innerHTML += `<br><small><i class="fas fa-map-marker-alt"></i> Локация: <img src="${avatarUrl}" alt="" style="width: 16px; height: 16px; border-radius: 3px; object-fit: cover; vertical-align: middle; margin: 0 4px; cursor: pointer;" title="Нажмите, чтобы увидеть локацию" onerror="this.style.display='none'"> <strong>${escapeHtmlForDisplay(currentLocation)}</strong></small>`;
+            
+            // Делаем картинку локации кликабельной
+            const locationImg = modalDescription.querySelector('img[src="' + avatarUrl + '"]');
+            if (locationImg) {
+                makeLocationImageClickable(locationImg);
+            }
         })();
     }
     
