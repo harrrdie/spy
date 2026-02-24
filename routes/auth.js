@@ -63,9 +63,16 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Введите логин и пароль' });
         }
 
-        const user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?)').get(username);
+        const user = db.prepare('SELECT * FROM users WHERE LOWER(username) = LOWER(?) AND deleted_at IS NULL').get(username);
         if (!user) {
             return res.status(401).json({ error: 'Неверный логин или пароль' });
+        }
+
+        if (user.is_banned) {
+            const reason = user.ban_reason && user.ban_reason.trim().length > 0
+                ? `Аккаунт заблокирован: ${user.ban_reason}`
+                : 'Аккаунт заблокирован. Обратитесь к администратору.';
+            return res.status(403).json({ error: reason });
         }
 
         const validPassword = await bcrypt.compare(password, user.password_hash);
@@ -122,8 +129,13 @@ router.get('/me', (req, res) => {
         return res.json({ user: null });
     }
 
-    const user = db.prepare('SELECT id, username, display_name, avatar_seed FROM users WHERE id = ?').get(req.session.userId);
+    const user = db.prepare('SELECT id, username, display_name, avatar_seed, is_admin, is_banned, deleted_at FROM users WHERE id = ?').get(req.session.userId);
     if (!user) {
+        req.session.destroy();
+        return res.json({ user: null });
+    }
+
+    if (user.deleted_at || user.is_banned) {
         req.session.destroy();
         return res.json({ user: null });
     }
@@ -136,7 +148,8 @@ router.get('/me', (req, res) => {
             username: user.username,
             display_name: user.display_name || user.username,
             avatar_seed: user.avatar_seed || user.username,
-            stats: stats || { games_played: 0, games_won_as_spy: 0, games_won_as_civilian: 0, games_lost: 0 }
+            stats: stats || { games_played: 0, games_won_as_spy: 0, games_won_as_civilian: 0, games_lost: 0 },
+            is_admin: !!user.is_admin
         }
     });
 });

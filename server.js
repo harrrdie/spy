@@ -17,6 +17,7 @@ const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profile');
 const leaderboardRoutes = require('./routes/leaderboard');
 const locationsRoutes = require('./routes/locations');
+const adminRoutes = require('./routes/admin');
 
 // Конфигурация сервера
 const PORT = process.env.PORT || 3000;
@@ -54,6 +55,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/locations', locationsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Создаем папки для загрузок
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -96,6 +98,9 @@ app.get('/profile/:id?', (req, res) => {
 });
 app.get('/leaderboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'leaderboard.html'));
+});
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
 app.get('/room/:code', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

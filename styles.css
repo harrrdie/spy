@@ -680,6 +680,16 @@ h3 {
     color: #4db8ff;
 }
 
+/* Ссылки в тёмной теме (чтобы не были фиолетовыми после посещения) */
+.dark-theme a,
+.dark-theme a:visited {
+    color: #4db8ff;
+}
+
+.dark-theme a:hover {
+    color: #80d4ff;
+}
+
 /* Формы */
 .form-group {
     margin-bottom: 20px;

@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 
 const db = new Database(path.join(__dirname, 'spy_game.db'));
 
@@ -16,6 +17,24 @@ function initDatabase() {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+
+    // Миграции для таблицы пользователей (добавляем роли/баны без потери данных)
+    try {
+        const userCols = db.prepare("PRAGMA table_info(users)").all();
+        const hasCol = (name) => userCols.some(c => c.name === name);
+        if (!hasCol('is_admin')) {
+            db.exec(`ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0`);
+        }
+        if (!hasCol('is_banned')) {
+            db.exec(`ALTER TABLE users ADD COLUMN is_banned INTEGER DEFAULT 0`);
+        }
+        if (!hasCol('ban_reason')) {
+            db.exec(`ALTER TABLE users ADD COLUMN ban_reason TEXT`);
+        }
+        if (!hasCol('deleted_at')) {
+            db.exec(`ALTER TABLE users ADD COLUMN deleted_at DATETIME`);
+        }
+    } catch (e) { /* игнорируем проблемы миграции, если колонка уже есть */ }
 
     // Таблица статистики игр (связь с пользователем)
     db.exec(`
@@ -139,6 +158,24 @@ function initDatabase() {
     `);
     db.exec(`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);`);
 
+    // Логи действий администраторов
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS admin_actions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            admin_id INTEGER NOT NULL,
+            target_user_id INTEGER,
+            action TEXT NOT NULL,
+            details TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (admin_id) REFERENCES users(id),
+            FOREIGN KEY (target_user_id) REFERENCES users(id)
+        )
+    `);
+    db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_admin_actions_admin 
+        ON admin_actions(admin_id, created_at DESC)
+    `);
+
     // Пользовательские локации и картинки к ним
     db.exec(`
         CREATE TABLE IF NOT EXISTS user_locations (
@@ -169,6 +206,31 @@ function initDatabase() {
         CREATE INDEX IF NOT EXISTS idx_friends_friend ON friends(friend_id);
         CREATE INDEX IF NOT EXISTS idx_game_history_user ON game_history(user_id, played_at DESC);
     `);
+
+    // Обновляем существующего пользователя admin до роли администратора (если он уже был создан ранее)
+    try {
+        db.prepare('UPDATE users SET is_admin = 1 WHERE LOWER(username) = LOWER(?)').run('admin');
+    } catch (e) {
+        // игнорируем, если таблицы ещё нет или нет такого пользователя
+    }
+
+    // Создаем дефолтного администратора, если его ещё нет
+    try {
+        const existingAdmin = db.prepare(
+            'SELECT id FROM users WHERE LOWER(username) = LOWER(?)'
+        ).get('admin');
+        if (!existingAdmin) {
+            const passwordHash = bcrypt.hashSync('admin123', 10);
+            const result = db.prepare(`
+                INSERT INTO users (username, password_hash, display_name, avatar_seed, is_admin)
+                VALUES (?, ?, ?, ?, 1)
+            `).run('admin', passwordHash, 'Администратор', 'admin');
+            const adminId = result.lastInsertRowid;
+            db.prepare('INSERT INTO user_stats (user_id, rating) VALUES (?, 0)').run(adminId, 0);
+        }
+    } catch (e) {
+        // если что-то пошло не так при создании админа, не роняем приложение
+    }
 }
 
 initDatabase();

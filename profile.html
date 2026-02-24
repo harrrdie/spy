@@ -208,6 +208,7 @@
                         </button>
                     </div>
                     <a href="/" style="color: #4db8ff; text-decoration: none;"><i class="fas fa-gamepad"></i> Играть</a>
+                    <a href="/admin" id="adminLink" style="color: #ffd700; text-decoration: none; display: none;"><i class="fas fa-shield-alt"></i> Админ‑панель</a>
                     <span id="headerAuth"></span>
                 </div>
                 <div class="theme-toggle-container">
@@ -242,6 +243,9 @@
                         <div class="profile-info">
                             <h2 id="profileDisplayName">-</h2>
                             <div class="profile-username" id="profileUsername">@username</div>
+                            <div id="profileBanLabel" style="display:none;margin-bottom:8px;color:#ff6b6b;font-weight:600;">
+                                <i class="fas fa-ban"></i> Аккаунт заблокирован
+                            </div>
                             <div class="profile-actions" id="profileActions" style="display: none;">
                                 <button class="btn-secondary edit-btn" id="editProfileBtn"><i class="fas fa-edit"></i> Редактировать</button>
                             </div>

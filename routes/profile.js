@@ -99,7 +99,7 @@ router.get('/:id', (req, res) => {
         const userId = parseInt(req.params.id);
         
         const user = db.prepare(`
-            SELECT id, username, display_name, avatar_seed, created_at 
+            SELECT id, username, display_name, avatar_seed, created_at, is_banned, ban_reason
             FROM users WHERE id = ?
         `).get(userId);
 
@@ -168,7 +168,9 @@ router.get('/:id', (req, res) => {
                 username: user.username,
                 display_name: user.display_name || user.username,
                 avatar_seed: user.avatar_seed || user.username,
-                created_at: user.created_at
+                created_at: user.created_at,
+                is_banned: !!user.is_banned,
+                ban_reason: user.ban_reason || null
             },
             stats: stats || { games_played: 0, games_won_as_spy: 0, games_won_as_civilian: 0, games_lost: 0, rating: 0 },
             comments: comments.map(c => ({ ...c, author_name: c.author_display_name || c.author_name })),
@@ -426,7 +428,9 @@ router.delete('/:profileId/comments/:commentId', (req, res) => {
         const comment = db.prepare('SELECT id, profile_user_id, author_user_id FROM profile_comments WHERE id = ?').get(commentId);
         if (!comment) return res.status(404).json({ error: 'Комментарий не найден' });
         if (comment.profile_user_id !== profileId) return res.status(400).json({ error: 'Неверный профиль' });
-        const canDelete = comment.author_user_id === req.session.userId || comment.profile_user_id === req.session.userId;
+        const currentUser = db.prepare('SELECT id, is_admin FROM users WHERE id = ?').get(req.session.userId);
+        const isAdmin = !!currentUser?.is_admin;
+        const canDelete = comment.author_user_id === req.session.userId || comment.profile_user_id === req.session.userId || isAdmin;
         if (!canDelete) return res.status(403).json({ error: 'Нет прав на удаление' });
         db.prepare('DELETE FROM profile_comments WHERE id = ?').run(commentId);
         res.json({ success: true });

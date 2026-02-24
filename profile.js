@@ -41,6 +41,19 @@ async function loadProfile() {
         document.getElementById('profileAvatar').src = getAvatarUrl(user.avatar_seed);
         document.getElementById('profileDisplayName').textContent = user.display_name || user.username;
         document.getElementById('profileUsername').textContent = '@' + user.username;
+        const banLabel = document.getElementById('profileBanLabel');
+        if (banLabel) {
+            if (user.is_banned) {
+                banLabel.style.display = 'block';
+                if (user.ban_reason) {
+                    banLabel.textContent = 'Аккаунт заблокирован: ' + user.ban_reason;
+                } else {
+                    banLabel.textContent = 'Аккаунт заблокирован';
+                }
+            } else {
+                banLabel.style.display = 'none';
+            }
+        }
 
         document.getElementById('statGamesPlayed').textContent = stats.games_played || 0;
         document.getElementById('statWonSpy').textContent = stats.games_won_as_spy || 0;
@@ -59,7 +72,7 @@ async function loadProfile() {
         if (likeCountEl) likeCountEl.textContent = likeCount || 0;
         if (likeBtn) {
             likeBtn.className = 'profile-like-btn' + (isLiked ? ' liked' : '');
-            likeBtn.innerHTML = `<i class="fas fa-heart"></i> <span id="likeBtnText">${isLiked ? 'Не нравится' : 'Нравится'}</span> <span class="profile-like-count" id="likeCount">${likeCount || 0}</span>`;
+            likeBtn.innerHTML = `<i class="fas fa-heart"></i> <span id="likeBtnText">Нравится</span> <span class="profile-like-count" id="likeCount">${likeCount || 0}</span>`;
         }
 
         // Друзья
@@ -266,19 +279,19 @@ function setupEventListeners(user, isOwnProfile, state) {
 
     if (document.getElementById('likeProfileBtn') && boundOtherActionsForUser !== user.id) {
         boundOtherActionsForUser = user.id;
-    document.getElementById('likeProfileBtn').addEventListener('click', async () => {
-        try {
-            const res = await fetch(`/api/profile/${user.id}/like`, { method: 'POST', credentials: 'same-origin' });
-            const data = await res.json();
-            if (data.success) {
-                const btn = document.getElementById('likeProfileBtn');
-                const countEl = document.getElementById('likeCount');
-                btn.className = 'profile-like-btn' + (data.isLiked ? ' liked' : '');
-                btn.querySelector('#likeBtnText').textContent = data.isLiked ? 'Не нравится' : 'Нравится';
-                if (countEl) countEl.textContent = data.likeCount;
-            }
-        } catch (e) { alert('Ошибка'); }
-    });
+        document.getElementById('likeProfileBtn').addEventListener('click', async () => {
+            try {
+                const res = await fetch(`/api/profile/${user.id}/like`, { method: 'POST', credentials: 'same-origin' });
+                const data = await res.json();
+                if (data.success) {
+                    const btn = document.getElementById('likeProfileBtn');
+                    const countEl = document.getElementById('likeCount');
+                    btn.className = 'profile-like-btn' + (data.isLiked ? ' liked' : '');
+                    // Текст всегда "Нравится", состояние показывает только цвет
+                    if (countEl) countEl.textContent = data.likeCount;
+                }
+            } catch (e) { alert('Ошибка'); }
+        });
 
     // Открыть модальное окно лайков при клике на количество
     const likeCountEl = document.getElementById('likeCount');
@@ -585,6 +598,7 @@ async function updateHeaderAuth() {
         const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
         const data = await res.json();
         if (data.user) {
+            const isAdmin = !!data.user.is_admin;
             el.innerHTML = `
                 <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                     <a href="/profile/${data.user.id}" style="color: #4db8ff; text-decoration: none;">
@@ -593,6 +607,7 @@ async function updateHeaderAuth() {
                     <a href="/leaderboard" style="color: #4db8ff; text-decoration: none;">
                         <i class="fas fa-trophy"></i> Рейтинг
                     </a>
+                    ${isAdmin ? '<a href="/admin" id="adminLink" style="color:#ffd700;text-decoration:none;"><i class="fas fa-shield-alt"></i> Админ‑панель</a>' : ''}
                     <a href="#" id="logoutBtn" style="color: #ff6b6b; text-decoration: none;">
                         <i class="fas fa-sign-out-alt"></i> Выйти
                     </a>

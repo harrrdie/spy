@@ -13,6 +13,8 @@ router.get('/', (req, res) => {
                    COALESCE(s.games_won_as_spy, 0) + COALESCE(s.games_won_as_civilian, 0) as wins
             FROM users u
             LEFT JOIN user_stats s ON u.id = s.user_id
+            WHERE u.deleted_at IS NULL
+              AND u.is_banned = 0
             ORDER BY COALESCE(s.rating, 0) DESC
             LIMIT 50
         `).all();

@@ -155,12 +155,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             const profileLink = document.getElementById('profileLink');
             const logoutLink = document.getElementById('logoutLink');
             const userDisplayName = document.getElementById('userDisplayName');
+            const adminLink = document.getElementById('adminLink');
             if (loginLink) loginLink.style.display = 'none';
             if (profileLink) {
                 profileLink.href = '/profile/' + data.user.id;
                 profileLink.style.display = 'inline-flex';
             }
             if (userDisplayName) userDisplayName.textContent = data.user.display_name || data.user.username;
+            if (adminLink && data.user.is_admin) {
+                adminLink.style.display = 'inline';
+            }
             if (logoutLink) {
                 logoutLink.style.display = 'inline';
                 logoutLink.onclick = async (e) => {

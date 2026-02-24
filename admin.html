@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <title>Админ‑панель | Шпион</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        .admin-sidebar {
+            background: rgba(255,255,255,0.05);
+            border-radius: 18px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .admin-sidebar h2 {
+            margin-bottom: 12px;
+        }
+        .admin-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .admin-nav li button {
+            width: 100%;
+            justify-content: flex-start;
+        }
+        .admin-nav li button.active {
+            background: linear-gradient(135deg, #4db8ff 0%, #2c8fd6 100%);
+            color: #fff;
+        }
+        .admin-main {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+            gap: 12px;
+        }
+        .admin-stat {
+            background: rgba(255,255,255,0.05);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .admin-stat .label {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        .admin-stat .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .admin-table th,
+        .admin-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            text-align: left;
+        }
+        .admin-table th {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .admin-table tr:hover {
+            background: rgba(255,255,255,0.04);
+        }
+        .admin-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .admin-toolbar input {
+            max-width: 240px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+        }
+        .badge-admin {
+            background: rgba(77,184,255,0.15);
+            color: #4db8ff;
+        }
+        .badge-banned {
+            background: rgba(255,107,107,0.18);
+            color: #ff6b6b;
+        }
+        .admin-user-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="emoji-rain"></div>
+    <div class="container">
+        <header style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+            <h1><a href="/" style="color:inherit;text-decoration:none;"><i class="fas fa-user-secret"></i> ШПИОН</a></h1>
+            <div class="header-search" style="flex:1;max-width:260px;position:relative;">
+                <input type="text" id="headerSearch" placeholder="Поиск по юзернейму..." autocomplete="off" style="width:100%;padding:8px 12px 8px 36px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:inherit;">
+                <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#888;"></i>
+                <div id="headerSearchResults" class="search-results-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:rgba(30,40,50,0.98);border:1px solid rgba(255,255,255,0.15);border-radius:8px;max-height:260px;overflow-y:auto;z-index:1000;"></div>
+            </div>
+            <div style="display:flex;gap:20px;align-items:center;">
+                <div id="adminHeaderAuth" style="display:flex;gap:15px;align-items:center;"></div>
+                <div class="theme-toggle-container">
+                    <button id="soundToggleBtn" class="sound-toggle-btn" title="Вкл/Выкл звуки">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <span class="theme-label">🌙</span>
+                    <label class="switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="theme-label">☀️</span>
+                    <button id="emojiToggleBtn" class="emoji-toggle-btn" title="Вкл/Выкл падающие эмодзи">
+                        <i class="fas fa-cloud-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2><i class="fas fa-shield-alt"></i> Админ‑панель</h2>
+                <p id="adminAccessError" class="error-container" style="display:none;margin-top:10px;"></p>
+                <div id="adminContent" style="display:none;margin-top:10px;">
+                    <div class="admin-layout">
+                        <aside class="admin-sidebar">
+                            <h3><i class="fas fa-bars"></i> Разделы</h3>
+                            <ul class="admin-nav">
+                                <li><button type="button" class="btn-secondary active" data-tab="dashboard"><i class="fas fa-chart-line"></i> Обзор</button></li>
+                                <li><button type="button" class="btn-secondary" data-tab="users"><i class="fas fa-users-cog"></i> Пользователи</button></li>
+                                <li><button type="button" class="btn-secondary" data-tab="comments"><i class="fas fa-comments"></i> Комментарии</button></li>
+                                <li><button type="button" class="btn-secondary" data-tab="locations"><i class="fas fa-map-marked-alt"></i> Локации</button></li>
+                                <li><button type="button" class="btn-secondary" data-tab="logs"><i class="fas fa-clipboard-list"></i> Логи админов</button></li>
+                            </ul>
+                        </aside>
+                        <section class="admin-main">
+                            <div id="tab-dashboard" class="admin-tab">
+                                <h3><i class="fas fa-chart-line"></i> Обзор</h3>
+                                <div id="dashboardStats" class="admin-grid"></div>
+                                <h3><i class="fas fa-user-plus"></i> Последние пользователи</h3>
+                                <div class="table-wrapper">
+                                    <table class="admin-table" id="dashboardUsersTable"></table>
+                                </div>
+                            </div>
+
+                            <div id="tab-users" class="admin-tab" style="display:none;">
+                                <div class="admin-toolbar">
+                                    <input type="text" id="usersSearch" placeholder="Поиск по логину/имени...">
+                                    <label style="display:flex;align-items:center;gap:6px;font-size:0.9rem;">
+                                        <input type="checkbox" id="usersOnlyBanned"> только забаненные
+                                    </label>
+                                    <button type="button" class="btn-secondary" id="usersReloadBtn" style="width:auto;"><i class="fas fa-sync"></i> Обновить</button>
+                                </div>
+                                <div class="table-wrapper">
+                                    <table class="admin-table" id="usersTable"></table>
+                                </div>
+                                <div id="userDetailsCard" style="margin-top:15px;display:none;"></div>
+                            </div>
+
+                            <div id="tab-comments" class="admin-tab" style="display:none;">
+                                <div class="admin-toolbar">
+                                    <input type="text" id="commentsSearch" placeholder="Поиск по тексту...">
+                                    <input type="number" id="commentsProfileId" placeholder="ID профиля">
+                                    <input type="number" id="commentsAuthorId" placeholder="ID автора">
+                                    <button type="button" class="btn-secondary" id="commentsReloadBtn" style="width:auto;"><i class="fas fa-sync"></i> Обновить</button>
+                                </div>
+                                <div class="table-wrapper">
+                                    <table class="admin-table" id="commentsTable"></table>
+                                </div>
+                            </div>
+
+                            <div id="tab-locations" class="admin-tab" style="display:none;">
+                                <div class="admin-toolbar">
+                                    <input type="number" id="locationsUserId" placeholder="ID пользователя">
+                                    <button type="button" class="btn-secondary" id="locationsReloadBtn" style="width:auto;"><i class="fas fa-sync"></i> Загрузить</button>
+                                    <button type="button" class="btn-secondary" id="locationsBulkDeleteBtn" style="width:auto;"><i class="fas fa-trash"></i> Удалить выбранные</button>
+                                </div>
+                                <div class="table-wrapper">
+                                    <table class="admin-table" id="locationsTable"></table>
+                                </div>
+                            </div>
+
+                            <div id="tab-logs" class="admin-tab" style="display:none;">
+                                <h3><i class="fas fa-clipboard-list"></i> Последние действия админов</h3>
+                                <div class="table-wrapper">
+                                    <table class="admin-table" id="logsTable"></table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Модалка редактирования статистики -->
+        <div id="adminStatsModal" class="modal">
+            <div class="modal-content">
+                <h2><i class="fas fa-sliders-h"></i> Изменить статистику</h2>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="statsGamesPlayedInput">Игр сыграно</label>
+                        <input type="number" id="statsGamesPlayedInput" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="statsSpyWinsInput">Побед за шпиона</label>
+                        <input type="number" id="statsSpyWinsInput" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="statsCivWinsInput">Побед за мирного</label>
+                        <input type="number" id="statsCivWinsInput" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="statsLostInput">Поражений</label>
+                        <input type="number" id="statsLostInput" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="statsRatingInput">Рейтинг</label>
+                        <input type="number" id="statsRatingInput" min="0">
+                    </div>
+                    <div id="adminStatsError" class="error-container" style="display:none;"></div>
+                </div>
+                <button type="button" class="btn-primary" id="adminStatsSaveBtn">Сохранить</button>
+                <button type="button" class="btn-secondary" id="adminStatsCancelBtn">Отмена</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Игра "Шпион" | Админ‑панель</p>
+        </footer>
+    </div>
+
+    <script src="/header.js"></script>
+    <script src="/admin.js"></script>
+</body>
+</html>
+
